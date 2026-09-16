@@ -21,6 +21,9 @@
     "mongodb": "^6.8.0",
     "razorpay": "^2.9.8"
   },
+  "devDependencies": {
+    "playwright-core": "^1.63.0"
+  },
   "engines": {
     "node": ">=20"
   }
