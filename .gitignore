@@ -4,3 +4,5 @@ web/.next
 .env
 *.log
 .DS_Store
+artifact_work
+outputs
