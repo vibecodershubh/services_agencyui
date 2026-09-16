@@ -1,0 +1,6 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function LoginPage() { const router = useRouter(); const [error, setError] = useState(""); async function submit(event) { event.preventDefault(); setError(""); const body = Object.fromEntries(new FormData(event.currentTarget)); const response = await fetch("/api/auth/login", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) }); const result = await response.json(); if (!response.ok) return setError(result.error || "Invalid credentials"); sessionStorage.setItem("asterline_access_token", result.accessToken); router.push("/portal/dashboard"); } return <main className="login-wrap"><form className="login-card" onSubmit={submit}><a className="brand" href="/"><span className="brand-mark">A</span><span>ASTERLINE</span></a><h1>Welcome back.</h1><p className="muted-copy">Sign in to view your engagements and invoices.</p><label>Email<input type="email" name="email" required autoComplete="email"/></label><label>Password<input type="password" name="password" required autoComplete="current-password"/></label>{error && <p className="error">{error}</p>}<button className="button button-light" type="submit">Sign in ↗</button></form></main>; }

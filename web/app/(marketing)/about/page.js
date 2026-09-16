@@ -1,0 +1,1 @@
+export default function AboutPage() { return <main className="section-pad"><div className="section-kicker">About Asterline</div><h1>Small team.<br/><em>Serious craft.</em></h1><p className="large-copy">We help ambitious teams turn difficult technical problems into systems that create momentum.</p></main>; }

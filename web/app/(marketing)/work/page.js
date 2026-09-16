@@ -1,0 +1,1 @@
+export default function WorkPage() { return <main className="section-pad"><div className="section-kicker">Selected work</div><h1>Work that<br/><em>moves.</em></h1><p className="hero-lede">Case studies will be added as engagements are completed.</p></main>; }

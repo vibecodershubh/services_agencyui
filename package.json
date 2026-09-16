@@ -1,0 +1,27 @@
+{
+  "name": "services-agency",
+  "version": "0.1.0",
+  "description": "Full-stack services agency website + client portal (API server)",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node --env-file=.env src/index.js",
+    "dev": "node --watch --env-file=.env src/index.js",
+    "dev:web": "npm --prefix web run dev",
+    "build:web": "npm --prefix web run build",
+    "start:web": "npm --prefix web run start",
+    "test:mongo": "node --env-file=.env scripts/test-mongo.js",
+    "seed:staff": "node --env-file=.env scripts/seed-staff.js",
+    "test:invoices": "node scripts/test-invoices.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.8.0",
+    "razorpay": "^2.9.8"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
