@@ -1,5 +1,6 @@
 {
   "enabledPlugins": {
-    "impeccable@impeccable": true
+    "impeccable@impeccable": true,
+    "webgpu-threejs-tsl@webgpu-threejs-tsl": true
   }
 }
