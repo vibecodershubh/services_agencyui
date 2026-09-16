@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "appRoot": "C:\\Users\\shubh\\OneDrive\\Documents\\services-agency\\web",
+  "repoRoot": "C:\\Users\\shubh\\OneDrive\\Documents\\services-agency",
+  "contextRoot": "C:\\Users\\shubh\\OneDrive\\Documents\\services-agency",
+  "sessionRoot": "C:\\Users\\shubh\\OneDrive\\Documents\\services-agency\\web\\.impeccable\\live",
+  "productPath": "C:\\Users\\shubh\\OneDrive\\Documents\\services-agency\\PRODUCT.md",
+  "designPath": "C:\\Users\\shubh\\OneDrive\\Documents\\services-agency\\DESIGN.md",
+  "resolvedFrom": "candidate:web"
+}
