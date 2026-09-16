@@ -47,14 +47,14 @@ Screenshots -> `%TEMP%\services-agency-run\shots\`. Logs ->
 | command | what it does |
 |---|---|
 | `node driver.mjs up` | start API + frontend in the background, wait until both respond |
-| `node driver.mjs shot <path> <name> [waitSelector]` | screenshot `http://localhost:3001<path>` to `shots/<name>.png`, print console + failed-request diagnostics |
-| `node driver.mjs demo` | `up`, then shoot home / `/services` / `/portal/login` |
+| `node driver.mjs shot <path> <name>` | screenshot `http://localhost:3001<path>` to `shots/<name>.png`, print console + failed-request diagnostics |
+| `node driver.mjs demo` | `up`, then shoot home / `/services` / `/portal/login` (one browser launch, reused across all three) |
 | `node driver.mjs down` | kill whatever's listening on :3000 and :3001 |
 
 Example — screenshot one specific page once the app is already up:
 
 ```bash
-node .claude/skills/run-frontend/driver.mjs shot "/services/ai-agents/support-chatbot" "service-detail" "body"
+node .claude/skills/run-frontend/driver.mjs shot "/services/ai-agents/support-chatbot" "service-detail"
 ```
 
 **Git Bash on Windows will mangle that command** — see Gotchas.
@@ -85,7 +85,7 @@ exercise the API against a live Mongo connection, not the frontend.
   `/services/x` to `C:/Program Files/Git/services/x`, and Playwright then
   fails with `Cannot navigate to invalid URL`. Fix: prefix the command with
   `MSYS_NO_PATHCONV=1`, e.g.
-  `MSYS_NO_PATHCONV=1 node .claude/skills/run-frontend/driver.mjs shot "/services/ai-agents/support-chatbot" service-detail body`.
+  `MSYS_NO_PATHCONV=1 node .claude/skills/run-frontend/driver.mjs shot "/services/ai-agents/support-chatbot" service-detail`.
   This only bites the `shot` subcommand's path argument, not `up`/`down`/`demo`.
 - **Playwright's own Chromium download is blocked here.** `npx playwright
   install` times out hitting `cdn.playwright.dev`. Don't try to fix this by

@@ -18,12 +18,13 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const RUN_DIR = path.join(tmpdir(), "services-agency-run");
-mkdirSync(RUN_DIR, { recursive: true });
 const SHOTS_DIR = path.join(RUN_DIR, "shots");
 mkdirSync(SHOTS_DIR, { recursive: true });
 
-const API_URL = "http://localhost:3000";
-const WEB_URL = "http://localhost:3001";
+const API_PORT = 3000;
+const WEB_PORT = 3001;
+const API_URL = `http://localhost:${API_PORT}`;
+const WEB_URL = `http://localhost:${WEB_PORT}`;
 
 const CHROME_CANDIDATES = [
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
@@ -36,13 +37,19 @@ function findBrowser() {
   return CHROME_CANDIDATES.find((p) => existsSync(p));
 }
 
+async function isRunning(url) {
+  try {
+    const res = await fetch(url);
+    return res.status < 500;
+  } catch {
+    return false;
+  }
+}
+
 async function waitForPort(url, timeoutMs = 40000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    try {
-      const res = await fetch(url);
-      if (res.status < 500) return true;
-    } catch {}
+    if (await isRunning(url)) return true;
     await new Promise((r) => setTimeout(r, 1000));
   }
   return false;
@@ -77,21 +84,20 @@ function killPort(port) {
   }
 }
 
+async function ensureSpawned(label, url, npmScript, logFile) {
+  if (await isRunning(url)) {
+    console.log(`${label} already up`);
+    return;
+  }
+  console.log(`starting ${label} (npm run ${npmScript})...`);
+  spawnBackground(npmScript, logFile);
+}
+
 async function cmdUp() {
-  const apiUp = await fetch(API_URL + "/health").then((r) => r.ok).catch(() => false);
-  if (!apiUp) {
-    console.log("starting backend (npm run dev)...");
-    spawnBackground("dev", path.join(RUN_DIR, "backend.log"));
-  } else {
-    console.log("backend already up");
-  }
-  const webUp = await fetch(WEB_URL).then(() => true).catch(() => false);
-  if (!webUp) {
-    console.log("starting frontend (npm run dev:web)...");
-    spawnBackground("dev:web", path.join(RUN_DIR, "frontend.log"));
-  } else {
-    console.log("frontend already up");
-  }
+  await Promise.all([
+    ensureSpawned("backend", API_URL + "/health", "dev", path.join(RUN_DIR, "backend.log")),
+    ensureSpawned("frontend", WEB_URL, "dev:web", path.join(RUN_DIR, "frontend.log")),
+  ]);
 
   const [apiReady, webReady] = await Promise.all([
     waitForPort(API_URL + "/health"),
@@ -103,17 +109,22 @@ async function cmdUp() {
 }
 
 function cmdDown() {
-  killPort(3000);
-  killPort(3001);
+  killPort(API_PORT);
+  killPort(WEB_PORT);
 }
 
-async function cmdShot(urlPath, name, waitSelector) {
+async function launchBrowser() {
   const browserPath = findBrowser();
   if (!browserPath) {
     console.error("No system Chrome/Edge found at the known install paths. Edit CHROME_CANDIDATES in driver.mjs.");
     process.exit(1);
   }
-  const browser = await chromium.launch({ executablePath: browserPath });
+  return chromium.launch({ executablePath: browserPath });
+}
+
+// Takes an already-launched browser so callers doing multiple shots (cmdDemo)
+// pay Chromium's launch cost once instead of once per page.
+async function shoot(browser, urlPath, name) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const consoleMsgs = [];
   // "Failed to load resource" console entries don't carry a URL — track
@@ -138,23 +149,28 @@ async function cmdShot(urlPath, name, waitSelector) {
     return null;
   });
   console.log("status:", resp?.status());
-  if (waitSelector) {
-    await page.waitForSelector(waitSelector, { timeout: 8000 }).catch((e) => console.log("waitFor error:", e.message));
-  }
   const shotPath = path.join(SHOTS_DIR, `${name}.png`);
   await page.screenshot({ path: shotPath, fullPage: true });
   console.log("screenshot:", shotPath);
   console.log("console:", consoleMsgs.length ? consoleMsgs.join("\n") : "(clean)");
   console.log("failed requests:", failedRequests.length ? failedRequests.join("\n") : "(none)");
 
+  await page.close();
+}
+
+async function cmdShot(urlPath, name) {
+  const browser = await launchBrowser();
+  await shoot(browser, urlPath, name);
   await browser.close();
 }
 
 async function cmdDemo() {
   await cmdUp();
-  await cmdShot("/", "home", "body");
-  await cmdShot("/services", "services-index", "body");
-  await cmdShot("/portal/login", "portal-login", "body");
+  const browser = await launchBrowser();
+  await shoot(browser, "/", "home");
+  await shoot(browser, "/services", "services-index");
+  await shoot(browser, "/portal/login", "portal-login");
+  await browser.close();
   console.log(`\nAll screenshots in ${SHOTS_DIR}`);
   console.log("Servers left running — call `node driver.mjs down` when finished.");
 }
@@ -168,12 +184,12 @@ switch (cmd) {
     cmdDown();
     break;
   case "shot":
-    await cmdShot(rest[0], rest[1], rest[2]);
+    await cmdShot(rest[0], rest[1]);
     break;
   case "demo":
     await cmdDemo();
     break;
   default:
-    console.log("usage: node driver.mjs <up|down|shot <path> <name> [selector]|demo>");
+    console.log("usage: node driver.mjs <up|down|shot <path> <name>|demo>");
     process.exit(1);
 }
